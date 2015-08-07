@@ -30,3 +30,6 @@ argument | explanation
 
 ### Ping a production server 5 times
 `sh ./coscale-cron.sh --cli /opt/coscale/coscale-cli --category "Monitoring" --name "Ping production" --live -- ping -n 5 \"http://production.com\"`
+
+## Questions, Feedback, or Bugs?
+Send an e-mail to info@coscale.com or add a ticket on Github.
