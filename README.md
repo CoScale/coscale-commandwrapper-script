@@ -1,144 +1,32 @@
-#!/usr/bin/env bash
-set -u
+# Cron wrapper
 
-# Command to run
-COMMAND=""
-EXIT_CODE=1
+## Description
+CoScale command wrapper or cron wrapper is a bash script that automatically sends event data to the CoScale monitoring service. It tracks runtime and exit code of your command and sends this information to CoScale.
 
-# CoScale CLI information
-CLI=$(whereis -b coscale-cli | awk '{print $2}')
-APP_ID=""
-APP_TOKEN=""
+## Prerequisite
+* Configured CoScale CLI
 
-# When LIVE execute command and send information to CoScale, else debug information is shown
-LIVE=0
+## Arguments
 
-# Information send to CoScale
-EVENT_NAME=""
-EVENT_CATEGORY="" # Could be id or name
+argument | explanation
+-------- | -----------
+`--app_id` *optional*       | CoScale application id
+`--app_token` *optional*    | CoScale token
+`--cli`                     | CoScale CLI tool directory
+`--name`                    | Name of the event
+`--category`                | Category of the event
+`--live`                    | Live switch, only use when you want to run command and send events, disable for testing
+`--`                        | Everything after this argument will be read as the command you want to execute. Make sure you escape " and '.
 
-# Parse arguments
-while [[ $# -gt 0 ]]
-do
-key="$1"
-    case $key in
-        --app_id)
-        APP_ID="$2"
-        shift
-        ;;
-        --app_token)
-        APP_TOKEN="$2"
-        shift
-        ;;
-        --cli)
-        CLI="$2"
-        shift
-        ;;
-        --name)
-        EVENT_NAME="$2"
-        shift
-        ;;
-        --category)
-        EVENT_CATEGORY="$2"
-        shift
-        ;;
-        --live)
-        LIVE=1
-        ;;
-        --)
-        shift
-        while [[ $# -gt 0 ]]
-        do
-            COMMAND="${COMMAND}$1 "
-            shift
-        done
-        ;;
-    esac
-    shift || true
-done
+## Notes
+* Make sure to escape ' and " characters as they may cause problems.
+* The command is always executed, even when CoScale services are having difficulties.
+* Exit code from the script is the same as your command
 
-# Only process command when live, else just show example output
-if [[ $LIVE -eq 0 ]]
-then
-    CONFIG_DIR="$(dirname "${CLI}")/api.conf"
+## Examples
 
-    echo
-    echo "# CoScale CLI TOOL "
-    echo
-    echo "Configuration"
-    echo " - COMMAND: ${COMMAND}"
-    echo " - CLI: ${CLI}"
+### Clean cache directory
+`sh ./coscale-cron.sh --cli /opt/coscale/coscale-cli --category "System cron" --name "Cache clean-up" --live -- rm -rf /var/cache/website/*`
 
-    # Show CLI config
-    if [[ -f $CONFIG_DIR ]] && [[ $APP_ID = "" ]] && [[ $APP_TOKEN = "" ]]; then
-        CONFIG=$(gunzip -c "${CONFIG_DIR}")
-        echo " - CONFIG: ${CONFIG}"
-    else
-        echo " - APP_ID: ${APP_ID}"
-        echo " - APP_TOKEN: ${APP_TOKEN}"
-    fi
-
-    echo
-    echo "Environment checks"
-
-    # Check CLI binary
-    if [[ ! -x "${CLI}" ]]
-    then
-        echo "- CoScale CLI: not found. Use --cli to pass its location."
-        exit 1
-    else
-        echo "- CoScale CLI: found"
-    fi
-
-    echo
-    echo "Initializing dry run"
-fi
-
-# Execute users command
-if [[ $LIVE -eq 0 ]]
-then
-    echo " - Executing: ${COMMAND}"
-else
-    # Gather start
-    COMMAND_START=$(date +%s)
-
-    # Execute and catch exit code
-    bash -c "${COMMAND}"
-    EXIT_CODE=$?
-
-    # Gather stop and calculate diff
-    COMMAND_STOP=$(date +%s)
-
-    # shellcheck disable=SC2004
-    COMMAND_DIFF=$(($COMMAND_STOP-$COMMAND_START))
-fi
-
-# Push information to CoScale
-if [[ $LIVE -eq 0 ]]
-then
-    echo " - Pushing event category to coscale"
-    if [[ $EVENT_CATEGORY = "" ]]
-    then
-        echo "   ERROR: Missing event --category"
-    else
-        echo "   ${EVENT_CATEGORY}"
-    fi
-
-
-    echo " - Pushing event to coscale"
-    if [[ $EVENT_NAME = "" ]]
-    then
-        echo "   ERROR: Missing event --name"
-    else
-        echo "   ${EVENT_NAME}"
-    fi
-else
-    if [[ $EVENT_NAME != "" ]] && [[ $EVENT_CATEGORY != "" ]]
-    then
-        ${CLI} event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI"
-        ${CLI} event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}"
-    fi
-fi
-
-# Return COMMAND exit code
-exit $EXIT_CODE
+### Ping a production server 5 times
+`sh ./coscale-cron.sh --cli /opt/coscale/coscale-cli --category "Monitoring" --name "Ping production" --live -- ping -n 5 \"http://production.com\"`
