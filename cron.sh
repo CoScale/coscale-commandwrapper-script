@@ -6,7 +6,7 @@ COMMAND=""
 EXIT_CODE=1
 
 # CoScale CLI information
-CLI=$(type "coscale-cli" | awk '{print $3}')
+CLI=$(which coscale-cli)
 APP_ID=""
 APP_TOKEN=""
 
