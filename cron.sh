@@ -6,6 +6,8 @@ COMMAND=""
 EXIT_CODE=1
 
 # CoScale CLI information
+COSCALE_CLI="/opt/coscale/cli/coscale-cli"
+CONFIG_DIR="/opt/coscale/cli/api.conf"
 APP_ID=""
 APP_TOKEN=""
 
@@ -55,14 +57,11 @@ done
 # Only process command when live, else just show example output
 if [[ $LIVE -eq 0 ]]
 then
-    CONFIG_DIR="/opt/coscale/cli/api.conf"
-
     echo
     echo "# CoScale CLI TOOL "
     echo
     echo "Configuration"
     echo " - COMMAND: ${COMMAND}"
-    echo " - CLI: ${CLI}"
 
     # Show CLI config
     if [[ -f $CONFIG_DIR ]] && [[ $APP_ID = "" ]] && [[ $APP_TOKEN = "" ]]; then
@@ -71,18 +70,6 @@ then
     else
         echo " - APP_ID: ${APP_ID}"
         echo " - APP_TOKEN: ${APP_TOKEN}"
-    fi
-
-    echo
-    echo "Environment checks"
-
-    # Check CLI binary
-    if [[ ! -x "$(which coscale-cli)" ]]
-    then
-        echo "- CoScale CLI: not found"
-        exit 1
-    else
-        echo "- CoScale CLI: found"
     fi
 
     echo
@@ -130,8 +117,8 @@ then
 else
     if [[ $EVENT_NAME != "" ]] && [[ $EVENT_CATEGORY != "" ]]
     then
-        /opt/coscale/cli/coscale-cli event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI"
-        /opt/coscale/cli/coscale-cli event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}"
+        $($COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI")
+        $($COSCALE_CLI event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}")
     fi
 fi
 
