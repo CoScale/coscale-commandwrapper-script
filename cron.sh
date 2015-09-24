@@ -8,8 +8,6 @@ EXIT_CODE=1
 # CoScale CLI information
 COSCALE_CLI="/opt/coscale/cli/coscale-cli"
 CONFIG_DIR="/opt/coscale/cli/api.conf"
-APP_ID=""
-APP_TOKEN=""
 
 # When LIVE execute command and send information to CoScale, else debug information is shown
 LIVE=0
@@ -60,20 +58,39 @@ then
     echo
     echo "# CoScale CLI TOOL "
     echo
-    echo "Configuration"
-    echo " - COMMAND: ${COMMAND}"
-
-    # Show CLI config
-    if [[ -f $CONFIG_DIR ]] && [[ $APP_ID = "" ]] && [[ $APP_TOKEN = "" ]]; then
-        CONFIG=$(gunzip -c "${CONFIG_DIR}")
-        echo " - CONFIG: ${CONFIG}"
-    else
-        echo " - APP_ID: ${APP_ID}"
-        echo " - APP_TOKEN: ${APP_TOKEN}"
-    fi
 
     echo
-    echo "Initializing dry run"
+    echo "## Checking configuration and environment"
+    echo
+    echo "### Your command:"
+    echo ${COMMAND}
+    echo "### Category of command"
+    if [[ $EVENT_CATEGORY = "" ]]
+    then
+        echo "ERROR: Missing event --category"
+    else
+        echo "${EVENT_CATEGORY}"
+    fi
+    echo "### Name of command"
+    if [[ $EVENT_NAME = "" ]]
+    then
+        echo "ERROR: Missing event --name"
+    else
+        echo "${EVENT_NAME}"
+    fi
+
+    echo "### CoScale CLI"
+    echo
+    echo "#### Checking location"
+    if [ -f "/usr/bin/coscale-cli" ] && [ "$(readlink /usr/bin/coscale-cli)" = "/opt/coscale/cli/coscale-cli" ]; then
+        echo "ERROR: CoScale CLI not found."
+    else
+        echo "CoScale CLI found."
+    fi
+    echo
+    echo "#### Checking configuration"
+    ./coscale-cli check-config | sed -e 's/[{}]//g' | awk --field-separator=":" '{print $2 }'
+    echo
 fi
 
 # Execute users command
