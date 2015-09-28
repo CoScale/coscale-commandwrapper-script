@@ -86,14 +86,15 @@ then
     echo "### CoScale CLI"
     echo
     echo "#### Checking location"
-    if [ -f "/usr/bin/coscale-cli" ] && [ "$(readlink /usr/bin/coscale-cli)" = "/opt/coscale/cli/coscale-cli" ]; then
-        echo "ERROR: CoScale CLI not found."
-    else
+    if [ -f "$COSCALE_CLI" ]; then
         echo "CoScale CLI found."
+    else
+        echo "ERROR: CoScale CLI not found."
     fi
+
     echo
     echo "#### Checking configuration"
-    ./coscale-cli check-config | sed -e 's/[{}]//g' | awk --field-separator=":" '{print $2 }'
+    $COSCALE_CLI check-config | sed -e 's/[{}]//g' | awk --field-separator=":" '{print $2 }'
     echo
 fi
 
