@@ -45,7 +45,11 @@ key="$1"
         while [ "$#" -gt 0 ]
         do
             COMMAND="${COMMAND}$1 "
-            shift
+
+            if [ "$#" -gt 1 ]
+            then
+                shift
+            fi
         done
         ;;
     esac
