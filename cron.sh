@@ -45,15 +45,15 @@ key="$1"
         while [ "$#" -gt 0 ]
         do
             COMMAND="${COMMAND}$1 "
-
-            if [ "$#" -gt 1 ]
-            then
-                shift
-            fi
+            shift
         done
         ;;
     esac
-    shift || true
+
+    if [ "$#" -gt 0 ]
+    then
+        shift
+    fi
 done
 
 # Only process command when live, else just show example output
