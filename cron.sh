@@ -65,14 +65,14 @@ then
     echo "### Your command:"
     echo ${COMMAND}
     echo "### Category of command"
-    if [ $EVENT_CATEGORY = "" ]
+    if [ "$EVENT_CATEGORY" = "" ]
     then
         echo "ERROR: Missing event --category"
     else
         echo "${EVENT_CATEGORY}"
     fi
     echo "### Name of command"
-    if [ $EVENT_NAME = "" ]
+    if [ "$EVENT_NAME" = "" ]
     then
         echo "ERROR: Missing event --name"
     else
@@ -116,7 +116,7 @@ fi
 if [ $LIVE -eq 0 ]
 then
     echo " - Pushing event category to coscale"
-    if [ $EVENT_CATEGORY = "" ]
+    if [ "$EVENT_CATEGORY" = "" ]
     then
         echo "   ERROR: Missing event --category"
     else
@@ -125,14 +125,14 @@ then
 
 
     echo " - Pushing event to coscale"
-    if [ $EVENT_NAME = "" ]
+    if [ "$EVENT_NAME" = "" ]
     then
         echo "   ERROR: Missing event --name"
     else
         echo "   ${EVENT_NAME}"
     fi
 else
-    if [ $EVENT_NAME != "" ] && [ $EVENT_CATEGORY != "" ]
+    if [ "$EVENT_NAME" != "" ] && [ "$EVENT_CATEGORY" != "" ]
     then
         $($COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "\[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}\]" --source "CLI")
         $($COSCALE_CLI event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}")
