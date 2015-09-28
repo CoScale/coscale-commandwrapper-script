@@ -17,7 +17,7 @@ EVENT_NAME=""
 EVENT_CATEGORY="" # Could be id or name
 
 # Parse arguments
-while [ $# -gt 0 ]
+while [ "$#" -gt 0 ]
 do
 key="$1"
     case $key in
@@ -42,7 +42,7 @@ key="$1"
         ;;
         --)
         shift
-        while [ $# -gt 0 ]
+        while [ "$#" -gt 0 ]
         do
             COMMAND="${COMMAND}$1 "
             shift
