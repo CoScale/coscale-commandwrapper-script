@@ -17,7 +17,7 @@ EVENT_NAME=""
 EVENT_CATEGORY="" # Could be id or name
 
 # Parse arguments
-while [[ $# -gt 0 ]]
+while [ $# -gt 0 ]
 do
 key="$1"
     case $key in
@@ -42,7 +42,7 @@ key="$1"
         ;;
         --)
         shift
-        while [[ $# -gt 0 ]]
+        while [ $# -gt 0 ]
         do
             COMMAND="${COMMAND}$1 "
             shift
@@ -53,7 +53,7 @@ key="$1"
 done
 
 # Only process command when live, else just show example output
-if [[ $LIVE -eq 0 ]]
+if [ $LIVE -eq 0 ]
 then
     echo
     echo "# CoScale CLI TOOL "
@@ -65,14 +65,14 @@ then
     echo "### Your command:"
     echo ${COMMAND}
     echo "### Category of command"
-    if [[ $EVENT_CATEGORY = "" ]]
+    if [ $EVENT_CATEGORY = "" ]
     then
         echo "ERROR: Missing event --category"
     else
         echo "${EVENT_CATEGORY}"
     fi
     echo "### Name of command"
-    if [[ $EVENT_NAME = "" ]]
+    if [ $EVENT_NAME = "" ]
     then
         echo "ERROR: Missing event --name"
     else
@@ -94,7 +94,7 @@ then
 fi
 
 # Execute users command
-if [[ $LIVE -eq 0 ]]
+if [ $LIVE -eq 0 ]
 then
     echo " - Executing: ${COMMAND}"
 else
@@ -113,10 +113,10 @@ else
 fi
 
 # Push information to CoScale
-if [[ $LIVE -eq 0 ]]
+if [ $LIVE -eq 0 ]
 then
     echo " - Pushing event category to coscale"
-    if [[ $EVENT_CATEGORY = "" ]]
+    if [ $EVENT_CATEGORY = "" ]
     then
         echo "   ERROR: Missing event --category"
     else
@@ -125,14 +125,14 @@ then
 
 
     echo " - Pushing event to coscale"
-    if [[ $EVENT_NAME = "" ]]
+    if [ $EVENT_NAME = "" ]
     then
         echo "   ERROR: Missing event --name"
     else
         echo "   ${EVENT_NAME}"
     fi
 else
-    if [[ $EVENT_NAME != "" ]] && [[ $EVENT_CATEGORY != "" ]]
+    if [ $EVENT_NAME != "" ] && [ $EVENT_CATEGORY != "" ]
     then
         $($COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "\[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}\]" --source "CLI")
         $($COSCALE_CLI event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}")
