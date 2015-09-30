@@ -141,7 +141,7 @@ else
     then
         echo
         echo "# Sending event to CoScale"
-        $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "\[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}\]" --source "CLI"
+        $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI"
         $COSCALE_CLI event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}"
     fi
 fi
