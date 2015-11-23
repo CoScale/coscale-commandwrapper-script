@@ -66,35 +66,20 @@ then
     echo
     echo "## Checking configuration and environment"
     echo
-    echo "### Your command:"
-    echo ${COMMAND}
-    echo "### Category of command"
-    if [ "$EVENT_CATEGORY" = "" ]
-    then
-        echo "ERROR: Missing event --category"
-    else
-        echo "${EVENT_CATEGORY}"
-    fi
-    echo "### Name of command"
-    if [ "$EVENT_NAME" = "" ]
-    then
-        echo "ERROR: Missing event --name"
-    else
-        echo "${EVENT_NAME}"
-    fi
-
-    echo "### CoScale CLI"
+    echo "### Command: \t\t${COMMAND}"
+    echo "### Command category:\t\t${EVENT_CATEGORY}"
+    echo "### Command name:\t\t${EVENT_NAME}"
     echo
-    echo "#### Checking location"
     if [ -f "$COSCALE_CLI" ]; then
-        echo "CoScale CLI found."
+        echo "### CoScale CLI:\t\t Found!"
     else
-        echo "ERROR: CoScale CLI not found."
+        echo "### CoScale CLI:\t\t Missing, check configuration!"
     fi
 
     echo
-    echo "#### Checking configuration"
+    echo "### Checking authentication"
     $COSCALE_CLI check-config | sed -e 's/[{}]//g' | awk --field-separator=":" '{print $2 }'
+    echo
     echo
 fi
 
