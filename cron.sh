@@ -86,6 +86,8 @@ fi
 # Execute users command
 if [ $LIVE -eq 0 ]
 then
+    echo "## Doing a test run"
+    echo
     echo " - Executing: ${COMMAND}"
 else
     # Gather start
