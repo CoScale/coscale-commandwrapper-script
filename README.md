@@ -1,3 +1,3 @@
 # Cron wrapper
 
-## [Go to documentation](http://docs.coscale.com/installation/events/wrappers/linux/bash/)
+## [Go to documentation](http://docs.coscale.com/events/wrappers/linux/index/)
