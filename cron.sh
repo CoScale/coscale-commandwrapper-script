@@ -7,7 +7,6 @@ EXIT_CODE=1
 
 # CoScale CLI information
 COSCALE_CLI="/opt/coscale/agent/coscale-cli"
-CONFIG_DIR="/opt/coscale/cli/api.conf"
 
 # When LIVE execute command and send information to CoScale, else debug information is shown
 LIVE=0
