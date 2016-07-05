@@ -131,11 +131,11 @@ else
     if [ "$EVENT_MESSAGE" != "" ] && [ "$EVENT_CATEGORY" != "" ]
     then
         echo
-        echo "# Sending event to CoScale"
-
-        # Create event category
-        $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI" || true
         echo "- Pushing event category"
+        $COSCALE_CLI event new \
+            --name "${EVENT_CATEGORY}" \
+            --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}, {\"name\":\"message\", \"type\":\"string\"}]" \
+            --source "CLI" || true
 
         echo
         echo "- Pushing start time event"
@@ -145,10 +145,11 @@ else
             --message "${EVENT_MESSAGE}" \
             --subject "a" \
             --timestamp "${COMMAND_START}" \
-            --attribute "{\"exitCode\":-1, \"executionTime\":-1}" \
+            --attribute "{\"exitCode\":-1, \"executionTime\":-1, \"message\":\"${EVENT_MESSAGE}\"}" \
             || true)
         echo "$output"
         eventId=$(echo "$output" | grep "eventId" | awk '{ print $2; }' | sed 's/"//g')
+        dataId=$(echo "$output" | grep "\"id\"" | awk '{ print $2; }' | sed 's/[",]//g')
     fi
 
     # Execute and catch exit code
@@ -167,12 +168,12 @@ else
     if [ "$EVENT_MESSAGE" != "" ] && [ "$EVENT_CATEGORY" != "" ]
     then
         # Set stoptime of event
-        $($COSCALE_CLI event updatedate \
         echo "- Pushing stop time event"
+        $COSCALE_CLI event updatedata \
             --id "${eventId}" \
-            --stopTime "${COMMAND_STOP}" \
-            --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}" \
-            || true)
+            --dataid "${dataId}" \
+            --stopTime ${COMMAND_STOP} \
+            --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}, \"message\":\"${EVENT_MESSAGE}\"}" || true
     fi
 fi
 
