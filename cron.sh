@@ -56,11 +56,12 @@ key="$1"
     fi
 done
 
+echo "CoScale commandwrapper tool"
+echo
+
 # Only process command when live, else just show example output
 if [ $LIVE -eq 0 ]
 then
-    echo "CoScale commandwrapper tool"
-    echo
     echo "Environment check"
     if [ -f "$COSCALE_CLI" ]; then
         echo "- Checking CLI installation: \t\tFound"
@@ -134,7 +135,10 @@ else
 
         # Create event category
         $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI" || true
+        echo "- Pushing event category"
 
+        echo
+        echo "- Pushing start time event"
         # Create event with empty stopTime
         output=$($COSCALE_CLI event newdata \
             --name "${EVENT_CATEGORY}" \
@@ -148,6 +152,8 @@ else
     fi
 
     # Execute and catch exit code
+    echo
+    echo "- Executing command"
     bash -c "${COMMAND}"
     EXIT_CODE=$?
 
@@ -160,11 +166,9 @@ else
     # Send stop event to CoScale
     if [ "$EVENT_MESSAGE" != "" ] && [ "$EVENT_CATEGORY" != "" ]
     then
-        echo
-        echo "# Updating stopTime on event in CoScale"
-
         # Set stoptime of event
         $($COSCALE_CLI event updatedate \
+        echo "- Pushing stop time event"
             --id "${eventId}" \
             --stopTime "${COMMAND_STOP}" \
             --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}" \
