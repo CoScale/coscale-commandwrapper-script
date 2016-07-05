@@ -11,9 +11,10 @@ CONFIG_DIR="/opt/coscale/cli/api.conf"
 
 # When LIVE execute command and send information to CoScale, else debug information is shown
 LIVE=0
+TEST_ERROR=0
 
 # Information send to CoScale
-EVENT_NAME=""
+EVENT_MESSAGE=""
 EVENT_CATEGORY="" # Could be id or name
 
 # Parse arguments
@@ -29,8 +30,8 @@ key="$1"
         APP_TOKEN="$2"
         shift
         ;;
-        --name)
-        EVENT_NAME="$2"
+        --message)
+        EVENT_MESSAGE="$2"
         shift
         ;;
         --category)
@@ -59,39 +60,91 @@ done
 # Only process command when live, else just show example output
 if [ $LIVE -eq 0 ]
 then
+    echo "CoScale commandwrapper tool"
     echo
-    echo "# CoScale CLI TOOL "
-    echo
-
-    echo
-    echo "## Checking configuration and environment"
-    echo
-    echo "### Command: \t\t${COMMAND}"
-    echo "### Command category:\t\t${EVENT_CATEGORY}"
-    echo "### Command name:\t\t${EVENT_NAME}"
-    echo
+    echo "Environment check"
     if [ -f "$COSCALE_CLI" ]; then
-        echo "### CoScale CLI:\t\t Found!"
+        echo "- Checking CLI installation: \t\tFound"
     else
-        echo "### CoScale CLI:\t\t Missing, check configuration!"
+        echo "- Checking CLI installation: \t\tMissing!"
+        TEST_ERROR=1
     fi
 
-    echo
-    echo "### Checking authentication"
-    $COSCALE_CLI check-config | sed -e 's/[{}]//g' | awk --field-separator=":" '{print $2 }'
-    echo
+    echo -n "- Checking CLI authentication: \t\t"
+    output=$($COSCALE_CLI config check 2>&1 >/dev/null)
+    echo "$output"
+    if [ "$output" != "Configuration successfuly checked" ]; then
+        TEST_ERROR=1
+    fi
     echo
 fi
 
 # Execute users command
 if [ $LIVE -eq 0 ]
 then
-    echo "## Doing a test run"
+    echo "Starting test run"
+    echo -n "- Pushing event category:"
+    if [ "$EVENT_CATEGORY" = "" ]
+    then
+        echo "\t\tERROR: Missing event category parameter, check documentation for more information"
+        TEST_ERROR=1
+    else
+        echo "\t\tOk"
+    fi
+
+    echo -n "- Pushing start time event:"
+    if [ "$EVENT_MESSAGE" = "" ]
+    then
+        echo "\tERROR: Missing event message parameter, check documentation for more information"
+        TEST_ERROR=1
+    else
+        echo "\t\tOk"
+    fi
+
+    echo -n "- Executing command"
+    if [ "$COMMAND" = "" ]
+    then
+        echo "\tERROR: Missing command parameter, check documentation for more information"
+        TEST_ERROR=1
+    else
+        echo "\t\t\tOk"
+    fi
+
+    if [ ! "$EVENT_MESSAGE" = "" ]
+    then
+        echo "- Pushing stop time event: \t\tOk"
+    fi
+
     echo
-    echo " - Executing: ${COMMAND}"
+    if [ $TEST_ERROR -eq 1 ]
+    then
+        echo "! Errors detected, please check your configuration."
+    fi
+    echo
 else
     # Gather start
     COMMAND_START=$(date +%s)
+
+    # Send start event to CoScale
+    if [ "$EVENT_MESSAGE" != "" ] && [ "$EVENT_CATEGORY" != "" ]
+    then
+        echo
+        echo "# Sending event to CoScale"
+
+        # Create event category
+        $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI" || true
+
+        # Create event with empty stopTime
+        output=$($COSCALE_CLI event data \
+            --name "${EVENT_CATEGORY}" \
+            --message "${EVENT_MESSAGE}" \
+            --subject "a" \
+            --timestamp "${COMMAND_START}" \
+            --attribute "{\"exitCode\":-1, \"executionTime\":-1}" \
+            || true)
+        echo "$output"
+        eventId=$(echo "$output" | grep "eventId" | awk '{ print $2; }' | sed 's/"//g')
+    fi
 
     # Execute and catch exit code
     bash -c "${COMMAND}"
@@ -102,34 +155,19 @@ else
 
     # shellcheck disable=SC2004
     COMMAND_DIFF=$(($COMMAND_STOP-$COMMAND_START))
-fi
 
-# Push information to CoScale
-if [ $LIVE -eq 0 ]
-then
-    echo " - Pushing event category to coscale"
-    if [ "$EVENT_CATEGORY" = "" ]
-    then
-        echo "   ERROR: Missing event --category"
-    else
-        echo "   ${EVENT_CATEGORY}"
-    fi
-
-
-    echo " - Pushing event to coscale"
-    if [ "$EVENT_NAME" = "" ]
-    then
-        echo "   ERROR: Missing event --name"
-    else
-        echo "   ${EVENT_NAME}"
-    fi
-else
-    if [ "$EVENT_NAME" != "" ] && [ "$EVENT_CATEGORY" != "" ]
+    # Send stop event to CoScale
+    if [ "$EVENT_MESSAGE" != "" ] && [ "$EVENT_CATEGORY" != "" ]
     then
         echo
-        echo "# Sending event to CoScale"
-        $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI"
-        $COSCALE_CLI event data --name "${EVENT_CATEGORY}" --message "${EVENT_NAME}" --subject "a" --timestamp "${COMMAND_START}" --stopTime "${COMMAND_STOP}" --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}"
+        echo "# Updating stopTime on event in CoScale"
+
+        # Set stoptime of event
+        $($COSCALE_CLI event updatedate \
+            --id "${eventId}" \
+            --stopTime "${COMMAND_STOP}" \
+            --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}}" \
+            || true)
     fi
 fi
 
