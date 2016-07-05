@@ -134,7 +134,7 @@ else
         $COSCALE_CLI event new --name "${EVENT_CATEGORY}" --attributeDescriptions "[{\"name\":\"exitCode\", \"type\":\"integer\"}, {\"name\":\"executionTime\", \"type\":\"integer\", \"unit\":\"s\"}]" --source "CLI" || true
 
         # Create event with empty stopTime
-        output=$($COSCALE_CLI event data \
+        output=$($COSCALE_CLI event newdata \
             --name "${EVENT_CATEGORY}" \
             --message "${EVENT_MESSAGE}" \
             --subject "a" \
