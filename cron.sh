@@ -118,6 +118,8 @@ then
     if [ $TEST_ERROR -eq 1 ]
     then
         echo "! Errors detected, please check your configuration."
+    else
+        echo "Everything is configured correctly, add --live before the '--' to start using the cron wrapper"
     fi
     echo
 else
