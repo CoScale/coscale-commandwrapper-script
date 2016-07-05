@@ -1,0 +1,5 @@
+
+# Used for testing the script
+.vagrant/
+*.deb
+Vagrantfile
