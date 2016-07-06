@@ -21,14 +21,6 @@ while [ "$#" -gt 0 ]
 do
 key="$1"
     case $key in
-        --app_id)
-        APP_ID="$2"
-        shift
-        ;;
-        --app_token)
-        APP_TOKEN="$2"
-        shift
-        ;;
         --message)
         EVENT_MESSAGE="$2"
         shift
