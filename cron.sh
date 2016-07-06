@@ -164,7 +164,7 @@ else
         $COSCALE_CLI event updatedata \
             --id "${eventId}" \
             --dataid "${dataId}" \
-            --stopTime ${COMMAND_STOP} \
+            --stopTime "${COMMAND_STOP}" \
             --attribute "{\"exitCode\":${EXIT_CODE}, \"executionTime\":${COMMAND_DIFF}, \"message\":\"${EVENT_MESSAGE}\"}" || true
     fi
 fi
